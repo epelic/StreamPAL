@@ -44,7 +44,7 @@ public sealed class LinuxEncoderSession:IDisposable
         if (_encoder.Codec == "AAC+ (HE-AAC)")
         {
             program = "fdkaac";
-            var profile = _outputChannels == 2 && _encoder.BitrateKbps <= 48 ? 29 : 5;
+            var profile = _outputChannels == 2 && _encoder.BitrateKbps <= 24 ? 29 : 5;
             args = $"-R --raw-channels {_outputChannels} --raw-rate {_inputRate} --raw-format S16L -p {profile} -s 2 -b {_encoder.BitrateKbps * 1000} -f 2 -o - -";
         }
         else

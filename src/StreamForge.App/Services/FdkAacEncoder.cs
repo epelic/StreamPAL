@@ -6,7 +6,7 @@ internal sealed class FdkAacEncoder : IDisposable
     public FdkAacEncoder(int sampleRate, int channels, int bitrate, bool he)
     {
         Check(Native.aacEncOpen(out _handle, 0, (uint)channels), "apertura");
-        try { var audioObjectType = he && channels == 2 && bitrate <= 48000 ? 29u : he ? 5u : 2u; Set(0x0100, audioObjectType); Set(0x0101, (uint)bitrate); Set(0x0103, (uint)sampleRate); Set(0x0106, channels == 1 ? 1u : 2u); Set(0x0300, 2); Set(0x0200, 1); Check(Native.aacEncEncode(_handle, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero), "inizializzazione"); var info = new Info { ConfBuf = new byte[64] }; Check(Native.aacEncInfo(_handle, ref info), "configurazione"); InputSamplesPerFrame = checked((int)(info.FrameLength * info.InputChannels)); if (InputSamplesPerFrame <= 0) throw new InvalidOperationException("Frame AAC non valido."); } catch { Dispose(); throw; }
+        try { var audioObjectType = he && channels == 2 && bitrate <= 24000 ? 29u : he ? 5u : 2u; Set(0x0100, audioObjectType); Set(0x0101, (uint)bitrate); Set(0x0103, (uint)sampleRate); Set(0x0106, channels == 1 ? 1u : 2u); Set(0x0300, 2); Set(0x0200, 1); Check(Native.aacEncEncode(_handle, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero), "inizializzazione"); var info = new Info { ConfBuf = new byte[64] }; Check(Native.aacEncInfo(_handle, ref info), "configurazione"); InputSamplesPerFrame = checked((int)(info.FrameLength * info.InputChannels)); if (InputSamplesPerFrame <= 0) throw new InvalidOperationException("Frame AAC non valido."); } catch { Dispose(); throw; }
     }
     public byte[] Encode(short[] pcm)
     {
