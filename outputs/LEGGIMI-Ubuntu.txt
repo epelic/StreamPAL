@@ -1,0 +1,21 @@
+StreamPAL 1.0.0 per Ubuntu Studio 26.04 LTS (64 bit)
+
+INSTALLAZIONE
+1. Copiare StreamPAL_1.0.0_amd64.deb sulla partizione Ubuntu.
+2. Aprire il file con Discover/Gestore pacchetti e scegliere Installa.
+3. Se il gestore grafico non installa le dipendenze, aprire un terminale nella cartella e usare:
+   sudo apt install ./StreamPAL_1.0.0_amd64.deb
+4. Avviare StreamPAL dal menu Audio oppure cercandolo nel menu applicazioni.
+
+PRIMO TEST
+- Selezionare PipeWire e il dispositivo di ingresso desiderato.
+- Impostare 48000 Hz per la maggior parte delle schede audio professionali.
+- Configurare un encoder e premere AVVIA STREAMING.
+- Controllare il log di connessione.
+
+CODEC
+- MP3, AAC-LC, OGG Vorbis e Opus sono gestiti da FFmpeg.
+- AAC+ / HE-AAC è gestito dal codec Fraunhofer FDK AAC.
+- OGG e Opus devono essere inviati a un server Icecast.
+
+Questa è una build nativa Linux x64 e non usa Wine.

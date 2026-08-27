@@ -1,0 +1,7 @@
+FDK AAC 2.0.3 source code and Windows build project:
+https://github.com/jimm98y/fdk-aac
+
+Upstream source code:
+https://github.com/mstorsjo/fdk-aac
+
+StreamPAL does not modify the FDK AAC library.

@@ -1,0 +1,39 @@
+StreamPAL END USER LICENSE AGREEMENT
+Version 1.0.0
+
+Copyright (c) 2026 Free Waves. All rights reserved.
+
+IMPORTANT: Please read this End User License Agreement ("Agreement") before installing or using StreamPAL (the "Software"). By installing, copying, or using the Software, you agree to be bound by this Agreement. If you do not agree, do not install or use the Software.
+
+1. LICENSE GRANT
+Free Waves grants you a limited, non-exclusive, non-transferable, revocable license to install and use the Software for lawful audio encoding and broadcasting activities on computers that you own or control.
+
+2. RESTRICTIONS
+You may not sell, sublicense, rent, lease, redistribute, reverse engineer, decompile, disassemble, or attempt to derive the source code of the Software except where such restriction is prohibited by applicable law. You may not remove copyright, trademark, or proprietary notices.
+
+3. STREAMING SERVICES AND CONTENT
+You are solely responsible for server credentials, broadcast content, metadata, bandwidth, royalties, music licenses, regulatory compliance, and compliance with the terms of any Icecast, SHOUTcast, hosting, or network service you use. The Software does not grant rights to broadcast third-party content.
+
+4. THIRD-PARTY COMPONENTS
+The Software may include redistributable open-source or third-party components. Those components remain subject to their respective license terms and notices included with the Software.
+
+5. DATA AND CREDENTIALS
+StreamPAL stores configuration and statistics locally. Exported configuration files may contain server passwords. You are responsible for protecting those files and credentials and for maintaining appropriate backups.
+
+6. DISCLAIMER OF WARRANTIES
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, CONTINUOUS AVAILABILITY, OR ERROR-FREE OPERATION.
+
+7. LIMITATION OF LIABILITY
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, FREE WAVES SHALL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, LOST REVENUE, LOST DATA, LOST AUDIENCE, SERVICE INTERRUPTION, OR CLAIMS ARISING FROM USE OR INABILITY TO USE THE SOFTWARE.
+
+8. TERMINATION
+This license terminates automatically if you materially breach this Agreement. Upon termination, you must stop using and remove the Software.
+
+9. GOVERNING LAW
+This Agreement is governed by applicable law. Mandatory consumer rights in your jurisdiction remain unaffected.
+
+10. CONTACT
+Website: https://www.freewaves.it
+Email: max@freewaves.it
+
+By selecting "I accept" and continuing installation, you acknowledge that you have read and accepted this Agreement.

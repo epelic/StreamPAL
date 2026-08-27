@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><AssemblyName>StreamPAL</AssemblyName><RootNamespace>StreamPAL.Linux</RootNamespace><Version>1.0.0</Version><PublishSingleFile>true</PublishSingleFile><SelfContained>true</SelfContained><RuntimeIdentifier>linux-x64</RuntimeIdentifier></PropertyGroup>
+  <ItemGroup><PackageReference Include="Avalonia" Version="11.3.7"/><PackageReference Include="Avalonia.Desktop" Version="11.3.7"/><PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.7"/><AvaloniaResource Include="..\StreamForge.App\Assets\app-logo.png" Link="Assets/app-logo.png"/></ItemGroup>
+</Project>

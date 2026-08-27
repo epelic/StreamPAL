@@ -1,0 +1,14 @@
+.vs/
+.idea/
+**/bin/
+**/obj/
+work/
+*.user
+*.suo
+*.pdb
+*.log
+*.tmp
+*.bak
+*.userconfig
+outputs/StreamForge64-win-x64/
+outputs/StreamPal-win-x64/
