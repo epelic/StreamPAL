@@ -34,7 +34,7 @@ public sealed class OpusBroadcastSession : IBroadcastSession
             _encoder.AddLog("Connessione al server sorgente…");
             using var tcp = new TcpClient(); await tcp.ConnectAsync(_encoder.Host, _encoder.Port, _stop.Token); using var network = tcp.GetStream();
             await HandshakeAsync(network, _stop.Token); _buffer.ClearBuffer(); _encoder.IsConnected = true; _encoder.AddLog("Handshake accettato: streaming Opus attivo");
-            var routed = new RoutingSampleProvider(_buffer.ToSampleProvider(), _encoder.ChannelMode);
+            var routed = new RoutingSampleProvider(_buffer.ToSampleProvider(), _encoder.ChannelMode, _encoder.OutputMode);
             var resampled = new WdlResamplingSampleProvider(routed, 48000);
             var pcm = new SampleToWaveProvider16(resampled);
             var opusEncoder = OpusCodecFactory.CreateEncoder(48000, pcm.WaveFormat.Channels, OpusApplication.OPUS_APPLICATION_AUDIO);

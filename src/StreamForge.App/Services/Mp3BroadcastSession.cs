@@ -23,7 +23,7 @@ public sealed class Mp3BroadcastSession : IBroadcastSession
         {
             _encoder.AddLog("Connessione al server sorgente…"); using var tcp = new TcpClient(); await tcp.ConnectAsync(_encoder.Host, _encoder.Port, _stop.Token); using var network = tcp.GetStream();
             await HandshakeAsync(network, _stop.Token); _buffer.ClearBuffer(); _encoder.IsConnected = true; _encoder.AddLog("Handshake accettato: streaming MP3 attivo");
-            var samples = new RoutingSampleProvider(_buffer.ToSampleProvider(), _encoder.ChannelMode); var resampled = new WdlResamplingSampleProvider(samples, _encoder.SampleRate); var pcm = new SampleToWaveProvider16(resampled);
+            var samples = new RoutingSampleProvider(_buffer.ToSampleProvider(), _encoder.ChannelMode, _encoder.OutputMode); var resampled = new WdlResamplingSampleProvider(samples, _encoder.SampleRate); var pcm = new SampleToWaveProvider16(resampled);
             using var lame = new LameMP3FileWriter(network, pcm.WaveFormat, _encoder.BitrateKbps); var block = new byte[Math.Max(4096, pcm.WaveFormat.AverageBytesPerSecond / 10)]; long sent = 0; var nextLog = DateTime.UtcNow.AddSeconds(10);
             while (!_stop.IsCancellationRequested) { var read = pcm.Read(block, 0, block.Length); if (read == 0) { await Task.Delay(10, _stop.Token); continue; } lame.Write(block, 0, read); sent += read; if (DateTime.UtcNow >= nextLog) { _encoder.AddLog($"Audio inviato: {sent / 1024:N0} KiB PCM codificati"); nextLog = DateTime.UtcNow.AddSeconds(10); } }
         }

@@ -198,9 +198,16 @@
                   <ComboBoxItem>OGG Vorbis</ComboBoxItem>
                   <ComboBoxItem>Opus</ComboBoxItem>
                 </ComboBox>
+                <TextBlock Text="Uscita codec" />
+                <ComboBox x:Name="OutputModeBox" SelectionChanged="EncoderField_Changed">
+                  <ComboBoxItem>Stereo</ComboBoxItem>
+                  <ComboBoxItem>Mono</ComboBoxItem>
+                </ComboBox>
                 <TextBlock Text="Bitrate / campionamento" />
                 <StackPanel Orientation="Horizontal">
                   <ComboBox x:Name="BitrateBox" Width="80" SelectionChanged="EncoderField_Changed">
+                    <ComboBoxItem>16</ComboBoxItem>
+                    <ComboBoxItem>24</ComboBoxItem>
                     <ComboBoxItem>32</ComboBoxItem>
                     <ComboBoxItem>48</ComboBoxItem>
                     <ComboBoxItem>64</ComboBoxItem>

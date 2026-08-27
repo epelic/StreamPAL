@@ -10,6 +10,29 @@ public partial class App : Application
     {
         Startup += (_, e) =>
         {
+            if (e.Args.Contains("--aac-self-test"))
+            {
+                Dispatcher.BeginInvoke(async () =>
+                {
+                    var report = new List<string>();
+                    try
+                    {
+                        foreach (var channels in new[] { 1, 2 }) foreach (var bitrate in new[] { 16000, 24000, 48000 })
+                        {
+                            using var encoder = new FdkAacEncoder(44100, channels, bitrate, true);
+                            var pcm = new short[encoder.InputSamplesPerFrame];
+                            for (var i = 0; i < pcm.Length; i++) pcm[i] = (short)(Math.Sin(i * 2 * Math.PI * 700 / 44100) * 10000);
+                            var total = 0; var frames = 0;
+                            for (var n = 0; n < 30; n++) { var encoded = encoder.Encode(pcm); if (encoded.Length > 0) { if (encoded.Length < 7 || encoded[0] != 0xFF || (encoded[1] & 0xF0) != 0xF0) throw new InvalidDataException("Frame ADTS non valido"); total += encoded.Length; frames++; } }
+                            if (frames < 25 || total <= 0) throw new InvalidDataException($"AAC+ {channels}ch {bitrate}bps non produce frame sufficienti");
+                            report.Add($"AAC+ {channels}ch {bitrate / 1000}kbps: {frames} frame, {total} byte OK");
+                        }
+                        await File.WriteAllLinesAsync(Path.Combine(Path.GetTempPath(), "StreamPAL-aac-self-test.txt"), report); Shutdown(0);
+                    }
+                    catch (Exception ex) { report.Add(ex.ToString()); await File.WriteAllLinesAsync(Path.Combine(Path.GetTempPath(), "StreamPAL-aac-self-test.txt"), report); Shutdown(5); }
+                });
+                return;
+            }
             if (e.Args.Contains("--stress-test"))
             {
                 Dispatcher.BeginInvoke(async () => { try { var result = await StressTestService.RunAsync(); await File.WriteAllTextAsync(Path.Combine(Path.GetTempPath(), "StreamPAL-stress-test.txt"), $"instances={result.Instances}\nencoders={result.Encoders}\nbytes={result.PcmBytesProcessed}\nelapsed={result.Elapsed.TotalSeconds:F3}\nmemory={result.MemoryDelta}"); Shutdown(result.Encoders == 256 && result.PcmBytesProcessed > 0 ? 0 : 4); } catch (Exception ex) { await File.WriteAllTextAsync(Path.Combine(Path.GetTempPath(), "StreamPAL-stress-test.txt"), ex.ToString()); Shutdown(2); } });

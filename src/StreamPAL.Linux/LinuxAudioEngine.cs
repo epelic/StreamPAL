@@ -22,13 +22,20 @@ public sealed class LinuxAudioEngine:IDisposable
 
 public sealed class LinuxEncoderSession:IDisposable
 {
-    private readonly EncoderProfile _encoder;private readonly int _inputRate;private readonly Channel<byte[]> _queue=Channel.CreateBounded<byte[]>(new BoundedChannelOptions(40){FullMode=BoundedChannelFullMode.DropOldest,SingleReader=true});private readonly CancellationTokenSource _stop=new();private readonly Task _worker;
-    public LinuxEncoderSession(EncoderProfile encoder,int inputRate){_encoder=encoder;_inputRate=inputRate;_worker=Task.Run(RunAsync);}
-    public void Feed(byte[] pcm)=>_queue.Writer.TryWrite(pcm);
+    private readonly EncoderProfile _encoder;private readonly int _inputRate;private readonly int _outputChannels;private readonly Channel<byte[]> _queue=Channel.CreateBounded<byte[]>(new BoundedChannelOptions(120){FullMode=BoundedChannelFullMode.DropOldest,SingleReader=true});private readonly CancellationTokenSource _stop=new();private readonly Task _worker;
+    public LinuxEncoderSession(EncoderProfile encoder,int inputRate){_encoder=encoder;_inputRate=inputRate;_outputChannels=encoder.OutputMode.Equals("Mono",StringComparison.OrdinalIgnoreCase)||encoder.ChannelMode=="Mono (L+R)"?1:2;_worker=Task.Run(RunAsync);}
+    public void Feed(byte[] pcm)=>_queue.Writer.TryWrite(Route(pcm));
+    private byte[] Route(byte[] pcm)
+    {
+        if(_outputChannels==2&&_encoder.ChannelMode=="Stereo")return pcm;
+        var frames=pcm.Length/4;var output=new byte[frames*_outputChannels*2];
+        for(var f=0;f<frames;f++){var i=f*4;var l=(short)(pcm[i]|pcm[i+1]<<8);var r=(short)(pcm[i+2]|pcm[i+3]<<8);var selected=_encoder.ChannelMode=="Solo sinistro"?l:_encoder.ChannelMode=="Solo destro"?r:(short)(((int)l+r)/2);if(_outputChannels==1){output[f*2]=(byte)selected;output[f*2+1]=(byte)(selected>>8);}else{var o=f*4;output[o]=(byte)selected;output[o+1]=(byte)(selected>>8);output[o+2]=(byte)selected;output[o+3]=(byte)(selected>>8);}}
+        return output;
+    }
     private async Task RunAsync(){var delay=2;while(!_stop.IsCancellationRequested){try{await StreamOnceAsync(_stop.Token);delay=2;}catch(OperationCanceledException){break;}catch(Exception ex){_encoder.IsConnected=false;_encoder.AddLog($"Connessione interrotta: {ex.Message}. Riprovo tra {delay}s…");await Task.Delay(TimeSpan.FromSeconds(delay),_stop.Token);delay=Math.Min(delay*2,30);}}}
     private async Task StreamOnceAsync(CancellationToken token)
     {
-        using var tcp=new TcpClient();await tcp.ConnectAsync(_encoder.Host,_encoder.Port,token);using var network=tcp.GetStream();await Handshake(network,token);using var codec=CreateCodec();_encoder.IsConnected=true;_encoder.AddLog($"Streaming {_encoder.Codec} attivo");var copy=codec.StandardOutput.BaseStream.CopyToAsync(network,token);await foreach(var block in _queue.Reader.ReadAllAsync(token)){await codec.StandardInput.BaseStream.WriteAsync(block,token);await codec.StandardInput.BaseStream.FlushAsync(token);if(copy.IsCompleted)await copy;}await copy;
+        using var tcp=new TcpClient{NoDelay=false};await tcp.ConnectAsync(_encoder.Host,_encoder.Port,token);using var network=tcp.GetStream();await Handshake(network,token);using var codec=CreateCodec();_encoder.IsConnected=true;_encoder.AddLog($"Streaming {_encoder.Codec} {_encoder.OutputMode} attivo · buffer 6 s");var copy=codec.StandardOutput.BaseStream.CopyToAsync(network,token);await foreach(var block in _queue.Reader.ReadAllAsync(token)){await codec.StandardInput.BaseStream.WriteAsync(block,token);if(copy.IsCompleted)await copy;}await copy;
     }
     private Process CreateCodec()
     {
@@ -37,18 +44,11 @@ public sealed class LinuxEncoderSession:IDisposable
         if (_encoder.Codec == "AAC+ (HE-AAC)")
         {
             program = "fdkaac";
-            args = $"-R --raw-channels 2 --raw-rate {_inputRate} --raw-format S16L -p 5 -s 2 -b {_encoder.BitrateKbps * 1000} -f 2 -o - -";
+            var profile = _outputChannels == 2 && _encoder.BitrateKbps <= 48 ? 29 : 5;
+            args = $"-R --raw-channels {_outputChannels} --raw-rate {_inputRate} --raw-format S16L -p {profile} -s 2 -b {_encoder.BitrateKbps * 1000} -f 2 -o - -";
         }
         else
         {
-            var channels = _encoder.ChannelMode == "Mono (L+R)" ? 1 : 2;
-            var pan = _encoder.ChannelMode switch
-            {
-                "Solo sinistro" => "-af pan=stereo|c0=c0|c1=c0",
-                "Solo destro" => "-af pan=stereo|c0=c1|c1=c1",
-                "Mono (L+R)" => "-ac 1",
-                _ => ""
-            };
             var codec = _encoder.Codec switch
             {
                 "MP3" => "-c:a libmp3lame -f mp3",
@@ -58,7 +58,7 @@ public sealed class LinuxEncoderSession:IDisposable
                 _ => throw new NotSupportedException($"Codec non supportato: {_encoder.Codec}")
             };
             program = "ffmpeg";
-            args = $"-hide_banner -loglevel error -f s16le -ar {_inputRate} -ac 2 -i pipe:0 {pan} -ar {_encoder.SampleRate} -ac {channels} -b:a {_encoder.BitrateKbps}k {codec} pipe:1";
+            args = $"-hide_banner -loglevel error -f s16le -ar {_inputRate} -ac {_outputChannels} -i pipe:0 -ar {_encoder.SampleRate} -ac {_outputChannels} -b:a {_encoder.BitrateKbps}k {codec} pipe:1";
         }
         var p = new Process { StartInfo = new(program, args) { UseShellExecute = false, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true } };
         if (!p.Start()) throw new InvalidOperationException("Codec non avviato");

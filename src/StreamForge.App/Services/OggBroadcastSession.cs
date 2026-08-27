@@ -22,7 +22,7 @@ public sealed class OggBroadcastSession : IBroadcastSession
         {
             _encoder.AddLog("Connessione al server sorgente…"); using var tcp = new TcpClient(); await tcp.ConnectAsync(_encoder.Host, _encoder.Port, _stop.Token); using var network = tcp.GetStream(); await HandshakeAsync(network, _stop.Token);
             _buffer.ClearBuffer(); _encoder.IsConnected = true; _encoder.AddLog("Handshake accettato: streaming OGG Vorbis attivo");
-            var provider = new WdlResamplingSampleProvider(new RoutingSampleProvider(_buffer.ToSampleProvider(), _encoder.ChannelMode), _encoder.SampleRate); var channels = provider.WaveFormat.Channels;
+            var provider = new WdlResamplingSampleProvider(new RoutingSampleProvider(_buffer.ToSampleProvider(), _encoder.ChannelMode, _encoder.OutputMode), _encoder.SampleRate); var channels = provider.WaveFormat.Channels;
             var quality = Math.Clamp((_encoder.BitrateKbps - 32) / 160f, 0.05f, 1f); var info = VorbisInfo.InitVariableBitRate(channels, _encoder.SampleRate, quality); var ogg = new OggStream(Random.Shared.Next()); var comments = new Comments(); comments.AddTag("TITLE", _encoder.Metadata); comments.AddTag("ARTIST", _encoder.StationName);
             ogg.PacketIn(HeaderPacketBuilder.BuildInfoPacket(info)); ogg.PacketIn(HeaderPacketBuilder.BuildCommentsPacket(comments)); ogg.PacketIn(HeaderPacketBuilder.BuildBooksPacket(info)); Flush(ogg, network, true);
             var state = ProcessingState.Create(info); var interleaved = new float[1024 * channels]; var planar = Enumerable.Range(0, channels).Select(_ => new float[1024]).ToArray();

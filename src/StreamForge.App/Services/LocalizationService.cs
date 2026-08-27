@@ -17,6 +17,9 @@ public static class LocalizationService
         Words["en"]["Test di stabilità…"] = "Stability test…";
         Words["es"]["Test di stabilità…"] = "Prueba de estabilidad…";
         Words["fr"]["Test di stabilità…"] = "Test de stabilité…";
+        Words["en"]["Uscita codec"] = "Codec output";
+        Words["es"]["Uscita codec"] = "Salida del códec";
+        Words["fr"]["Uscita codec"] = "Sortie du codec";
     }
     public static void Apply(DependencyObject root, string language)
     {

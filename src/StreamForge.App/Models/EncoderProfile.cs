@@ -12,6 +12,7 @@ public sealed class EncoderProfile : INotifyPropertyChanged
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = "Nuovo encoder";
     public string ChannelMode { get; set; } = "Stereo";
+    public string OutputMode { get; set; } = "Stereo";
     public string Codec { get; set; } = "MP3";
     public int BitrateKbps { get; set; } = 128;
     public int SampleRate { get; set; } = 44100;
@@ -32,7 +33,7 @@ public sealed class EncoderProfile : INotifyPropertyChanged
     public bool Enabled { get; set; }
     [JsonIgnore] public bool IsRunning { get; set; }
     [JsonIgnore] public string Status => IsRunning ? "attivo" : "off";
-    [JsonIgnore] public string Summary => $"{Codec} {BitrateKbps}k · {Host}:{Port}{Mount}";
+    [JsonIgnore] public string Summary => $"{Codec} {BitrateKbps}k {OutputMode} · {Host}:{Port}{Mount}";
     [JsonIgnore] public bool IsConnected { get => _isConnected; set { if (_isConnected == value) return; _isConnected = value; Changed(); Changed(nameof(ConnectionColor)); Changed(nameof(Status)); } }
     [JsonIgnore] public string ConnectionColor => IsConnected ? "#39DC79" : "#F05252";
     [JsonIgnore] public int Listeners { get => _listeners; set { if (_listeners == value) return; _listeners = value; Changed(); } }

@@ -17,7 +17,7 @@ StreamPAL trasmette audio reale verso server Icecast 2 e SHOUTcast. Ogni istanza
 - Sorgenti Windows: WASAPI, DirectSound, ASIO, file, URL e generatore di test.
 - Sorgenti Linux: PipeWire/JACK, file, URL e generatore di test.
 - Codec: MP3, AAC-LC, AAC+/HE-AAC, OGG Vorbis e Opus.
-- Selezione stereo, solo sinistro, solo destro o mono L+R.
+- Selezione del canale sorgente e uscita codec realmente Stereo/Mono, inclusi 16 e 24 kbps per collegamenti a banda ridotta.
 - Bitrate e campionamento configurabili.
 - Metadata distinti per ogni encoder.
 - Riconnessione automatica, log in tempo reale, ascoltatori e statistiche fino a 72 ore.
