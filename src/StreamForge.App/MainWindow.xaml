@@ -140,7 +140,27 @@
               <ColumnDefinition />
               <ColumnDefinition Width="70" />
             </Grid.ColumnDefinitions>
-            <DataGrid x:Name="EncoderGrid" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionChanged="EncoderGrid_SelectionChanged" Background="#FFFFFF" Foreground="White" RowBackground="#FFFFFF" AlternatingRowBackground="#F4F7FA">
+            <DataGrid x:Name="EncoderGrid" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionChanged="EncoderGrid_SelectionChanged" Background="#FFFFFF" Foreground="#17212B" RowBackground="#FFFFFF" AlternatingRowBackground="#F4F7FA">
+              <DataGrid.Resources>
+                <Style TargetType="DataGridRow">
+                  <Setter Property="Foreground" Value="#17212B" />
+                  <Style.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                      <Setter Property="Background" Value="#DDF5FC" />
+                      <Setter Property="Foreground" Value="#153E78" />
+                    </Trigger>
+                  </Style.Triggers>
+                </Style>
+                <Style TargetType="DataGridCell">
+                  <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=Foreground}" />
+                  <Style.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                      <Setter Property="Background" Value="#DDF5FC" />
+                      <Setter Property="Foreground" Value="#153E78" />
+                    </Trigger>
+                  </Style.Triggers>
+                </Style>
+              </DataGrid.Resources>
               <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="On" Binding="{Binding Enabled}" Width="45" />
                 <DataGridTextColumn Header="Encoder" Binding="{Binding Name}" Width="180" />
