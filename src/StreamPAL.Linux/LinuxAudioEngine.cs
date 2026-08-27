@@ -4,9 +4,10 @@ public sealed class LinuxAudioEngine:IDisposable
 {
     private sealed class RunningSource{public required Process Process;public required CancellationTokenSource Stop;public required Task Pump;public ConcurrentDictionary<Guid,LinuxEncoderSession> Outputs=new();}
     private readonly ConcurrentDictionary<Guid,RunningSource> _sources=new();
+    public event Action<Guid,double,double>? LevelsUpdated;
     public void Start(SourceInstance instance)
     {
-        Stop(instance.Id);var stop=new CancellationTokenSource();var process=CreateSource(instance);var running=new RunningSource{Process=process,Stop=stop,Pump=Task.CompletedTask};_sources[instance.Id]=running;running.Pump=Task.Run(async()=>{var buffer=new byte[instance.InputSampleRate*4/20];try{while(!stop.IsCancellationRequested){var read=await process.StandardOutput.BaseStream.ReadAsync(buffer,stop.Token);if(read<=0)throw new IOException("La sorgente audio si è interrotta.");var copy=buffer[..read];foreach(var output in running.Outputs.Values)output.Feed(copy);}}catch(OperationCanceledException){}catch(Exception ex){foreach(var e in instance.Encoders.Where(x=>x.IsRunning))e.AddLog(ex.Message+" Riconnessione tra 5 secondi…");await ReconnectSourceAsync(instance,stop.Token);}},stop.Token);
+        Stop(instance.Id);var stop=new CancellationTokenSource();var process=CreateSource(instance);var running=new RunningSource{Process=process,Stop=stop,Pump=Task.CompletedTask};_sources[instance.Id]=running;running.Pump=Task.Run(async()=>{var buffer=new byte[instance.InputSampleRate*4/20];try{while(!stop.IsCancellationRequested){var read=await process.StandardOutput.BaseStream.ReadAsync(buffer,stop.Token);if(read<=0)throw new IOException("La sorgente audio si è interrotta.");var copy=buffer[..read];var levels=Measure(copy);LevelsUpdated?.Invoke(instance.Id,levels.Left,levels.Right);foreach(var output in running.Outputs.Values)output.Feed(copy);}}catch(OperationCanceledException){}catch(Exception ex){foreach(var e in instance.Encoders.Where(x=>x.IsRunning))e.AddLog(ex.Message+" Riconnessione tra 5 secondi…");await ReconnectSourceAsync(instance,stop.Token);}},stop.Token);
     }
     public void StartEncoder(SourceInstance source,EncoderProfile encoder){if(!_sources.TryGetValue(source.Id,out var running)){Start(source);running=_sources[source.Id];}if(running.Outputs.TryRemove(encoder.Id,out var old))old.Dispose();var session=new LinuxEncoderSession(encoder,source.InputSampleRate);running.Outputs[encoder.Id]=session;encoder.IsRunning=true;}
     public void StopEncoder(SourceInstance source,EncoderProfile encoder){encoder.IsRunning=false;encoder.IsConnected=false;if(_sources.TryGetValue(source.Id,out var running)&&running.Outputs.TryRemove(encoder.Id,out var session))session.Dispose();}
@@ -17,6 +18,7 @@ public sealed class LinuxAudioEngine:IDisposable
     }
     public void Stop(Guid id){if(!_sources.TryRemove(id,out var r))return;r.Stop.Cancel();foreach(var o in r.Outputs.Values)o.Dispose();TryKill(r.Process);r.Stop.Dispose();}
     private static string Q(string value)=>"\""+value.Replace("\"","\\\"")+"\"";internal static void TryKill(Process p){try{if(!p.HasExited)p.Kill(true);}catch{}p.Dispose();}
+    private static (double Left,double Right) Measure(byte[] pcm){var left=0;var right=0;for(var i=0;i+3<pcm.Length;i+=4){var l=Math.Abs((int)(short)(pcm[i]|pcm[i+1]<<8));var r=Math.Abs((int)(short)(pcm[i+2]|pcm[i+3]<<8));if(l>left)left=l;if(r>right)right=r;}return(Math.Min(100,left/327.68),Math.Min(100,right/327.68));}
     public void Dispose(){foreach(var id in _sources.Keys)Stop(id);}
 }
 
@@ -43,9 +45,9 @@ public sealed class LinuxEncoderSession:IDisposable
         string args;
         if (_encoder.Codec == "AAC+ (HE-AAC)")
         {
-            program = "fdkaac";
+            program = "/bin/sh";
             var profile = _outputChannels == 2 && _encoder.BitrateKbps <= 24 ? 29 : 5;
-            args = $"-R --raw-channels {_outputChannels} --raw-rate {_inputRate} --raw-format S16L -p {profile} -s 2 -b {_encoder.BitrateKbps * 1000} -f 2 -o - -";
+            args = $"-c \"ffmpeg -hide_banner -loglevel error -f s16le -ar {_inputRate} -ac {_outputChannels} -i pipe:0 -ar {_encoder.SampleRate} -ac {_outputChannels} -f s16le pipe:1 | fdkaac -S -R --raw-channels {_outputChannels} --raw-rate {_encoder.SampleRate} --raw-format S16L -p {profile} -s 2 -a 1 -b {_encoder.BitrateKbps * 1000} -f 2 -o - -\"";
         }
         else
         {
@@ -64,6 +66,6 @@ public sealed class LinuxEncoderSession:IDisposable
         if (!p.Start()) throw new InvalidOperationException("Codec non avviato");
         return p;
     }
-    private async Task Handshake(NetworkStream s,CancellationToken token){var content=_encoder.Codec switch{"MP3"=>"audio/mpeg","AAC-LC" or "AAC+ (HE-AAC)"=>"audio/aacp",_=>"application/ogg"};string req;if(_encoder.ServerType=="Icecast 2"){var mount=_encoder.Mount.StartsWith('/')?_encoder.Mount:"/"+_encoder.Mount;var auth=Convert.ToBase64String(Encoding.UTF8.GetBytes($"source:{_encoder.Password}"));req=$"PUT {mount} HTTP/1.1\r\nHost: {_encoder.Host}:{_encoder.Port}\r\nAuthorization: Basic {auth}\r\nUser-Agent: StreamPAL-Linux/1.0.0\r\nContent-Type: {content}\r\nIce-Name: {_encoder.StationName}\r\nIce-Public: 0\r\n\r\n";}else req=$"{_encoder.Password}\r\nicy-name:{_encoder.StationName}\r\nicy-pub:0\r\nicy-br:{_encoder.BitrateKbps}\r\ncontent-type:{content}\r\n\r\n";await s.WriteAsync(Encoding.UTF8.GetBytes(req),token);var b=new byte[1024];var read=await s.ReadAsync(b,token);var text=Encoding.ASCII.GetString(b,0,read);if(!(text.Contains("200")||text.Contains("OK2")||text.StartsWith("OK")))throw new IOException(text.Trim());}
+    private async Task Handshake(NetworkStream s,CancellationToken token){var content=_encoder.Codec switch{"MP3"=>"audio/mpeg","AAC-LC"=>"audio/aac","AAC+ (HE-AAC)"=>"audio/aacp",_=>"application/ogg"};string req;if(_encoder.ServerType=="Icecast 2"){var mount=_encoder.Mount.StartsWith('/')?_encoder.Mount:"/"+_encoder.Mount;var auth=Convert.ToBase64String(Encoding.UTF8.GetBytes($"source:{_encoder.Password}"));req=$"PUT {mount} HTTP/1.1\r\nHost: {_encoder.Host}:{_encoder.Port}\r\nAuthorization: Basic {auth}\r\nUser-Agent: StreamPAL-Linux/1.0.0\r\nContent-Type: {content}\r\nIce-Name: {_encoder.StationName}\r\nIce-Public: 0\r\n\r\n";}else req=$"{_encoder.Password}\r\nicy-name:{_encoder.StationName}\r\nicy-pub:0\r\nicy-br:{_encoder.BitrateKbps}\r\ncontent-type:{content}\r\n\r\n";await s.WriteAsync(Encoding.UTF8.GetBytes(req),token);using var timeout=CancellationTokenSource.CreateLinkedTokenSource(token);timeout.CancelAfter(TimeSpan.FromSeconds(8));var b=new byte[1024];var read=await s.ReadAsync(b,timeout.Token);var text=Encoding.ASCII.GetString(b,0,read);_encoder.AddLog("Server: "+text.Split('\r','\n',StringSplitOptions.RemoveEmptyEntries).FirstOrDefault());if(!(text.Contains("200")||text.Contains("OK2")||text.StartsWith("OK")))throw new IOException(text.Trim());}
     public void Dispose(){_stop.Cancel();_queue.Writer.TryComplete();try{_worker.Wait(1500);}catch{}_stop.Dispose();}
 }
