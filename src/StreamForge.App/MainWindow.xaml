@@ -22,12 +22,13 @@
         <MenuItem Header="Esci" Click="Exit_Click" />
       </MenuItem>
       <MenuItem Header="Lingua"><MenuItem Header="Italiano" Tag="it" Click="Language_Click"/><MenuItem Header="English" Tag="en" Click="Language_Click"/><MenuItem Header="Español" Tag="es" Click="Language_Click"/><MenuItem Header="Français" Tag="fr" Click="Language_Click"/></MenuItem>
+      <MenuItem x:Name="RegistrationMenu" Header="Registration" Click="Registration_Click" Visibility="Collapsed" />
       <MenuItem Header="Info"><MenuItem Header="Informazioni su StreamPAL" Click="Info_Click" /></MenuItem>
     </Menu>
     <DockPanel Grid.Row="1" Margin="0,0,0,12">
       <StackPanel Orientation="Horizontal">
         <Image Source="Assets/app-logo.png" Width="48" Height="48" Stretch="Uniform" Margin="0,0,10,0" />
-        <StackPanel VerticalAlignment="Center"><TextBlock Text="StreamPAL" FontSize="24" FontWeight="Bold" /><TextBlock Text="Versione 1.0.0" Foreground="#5E7182" /></StackPanel>
+        <StackPanel VerticalAlignment="Center"><StackPanel Orientation="Horizontal"><TextBlock Text="StreamPAL" FontSize="24" FontWeight="Bold" /><TextBlock x:Name="TrialHeader" Text="  ·  TRIAL VERSION" FontSize="18" FontWeight="Bold" Foreground="#E42DDF" VerticalAlignment="Center" Visibility="Collapsed" /></StackPanel><TextBlock x:Name="VersionHeader" Text="Versione 1.0.0" Foreground="#5E7182" /></StackPanel>
       </StackPanel>
       <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
         <Button Content="+ Istanza" Click="AddInstance_Click" />

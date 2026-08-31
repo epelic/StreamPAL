@@ -12,3 +12,6 @@ work/
 *.userconfig
 outputs/StreamForge64-win-x64/
 outputs/StreamPal-win-x64/
+outputs/StreamPAL-Trial-win-x64/
+outputs/StreamPAL-KeyGenerator-private/
+server/activation/data/activations.json

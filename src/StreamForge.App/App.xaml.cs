@@ -10,6 +10,14 @@ public partial class App : Application
     {
         Startup += (_, e) =>
         {
+            if (e.Args.Contains("--trial-id"))
+            {
+                using var license = new TrialLicenseService(); File.WriteAllText(Path.Combine(Path.GetTempPath(), "StreamPAL-trial-id.txt"), license.InstallationCode); Shutdown(0); return;
+            }
+            if (e.Args.Contains("--trial-activate-test"))
+            {
+                Dispatcher.BeginInvoke(async () => { using var license = new TrialLicenseService(); var code = Environment.GetEnvironmentVariable("STREAMPAL_TEST_LICENSE") ?? ""; var result = await license.TryRegisterAsync(code); File.WriteAllText(Path.Combine(Path.GetTempPath(), "StreamPAL-trial-activation.txt"), $"success={result.Success}\nerror={result.Error}"); Shutdown(result.Success ? 0 : 6); }); return;
+            }
             if (e.Args.Contains("--aac-self-test"))
             {
                 Dispatcher.BeginInvoke(async () =>

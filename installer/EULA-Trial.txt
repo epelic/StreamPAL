@@ -1,0 +1,13 @@
+STREAMPAL TRIAL VERSION LICENSE AGREEMENT
+
+Copyright (c) 2026 Free Waves. All rights reserved.
+
+This trial version may be evaluated for a cumulative period of 60 minutes. When the evaluation period expires, a valid registration code is required to continue using the software.
+
+The complete version may be requested free of charge for personal, non-professional use by contacting max@freewaves.it. It is not available under this offer for professional or commercial use.
+
+The registration code is personal, bound to one computer, and may not be transferred, resold, shared, published, reverse engineered, or used on another computer.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE AUTHORS SHALL NOT BE LIABLE FOR ANY DAMAGES ARISING FROM ITS USE.
+
+By installing or using StreamPAL Trial, you accept this agreement.
